@@ -5,19 +5,12 @@ import androidx.appcompat.app.AppCompatActivity;
 import android.os.Bundle;
 
 import android.content.Context;
-import android.content.res.TypedArray;
-import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.RectF;
-import android.graphics.drawable.BitmapDrawable;
-import android.graphics.drawable.Drawable;
-import android.os.Handler;
-import android.util.AttributeSet;
 import android.view.MotionEvent;
 import android.view.View;
-import android.view.ViewConfiguration;
 
 import androidx.core.view.MotionEventCompat;
 
@@ -40,9 +33,9 @@ public class joystick extends AppCompatActivity {
         private float x = 0;
         private float y = 0;
         private final float radius = 100;
-        private float startWid;
+        private float beginWid;
         private float endWid;
-        private float startHei;
+        private float beginHei;
         private float endHei;
         private RectF oval;
         private Boolean playMoving = false;
@@ -66,16 +59,16 @@ public class joystick extends AppCompatActivity {
             canvas.drawCircle(this.x, this.y, this.radius, myPaint);
 
         }
-        public void onSizeChanged(int w, int h, int oldw, int oldh) {
-            super.onSizeChanged(w, h, oldw, oldh);
-            this.startWid = (float)getWidth()/8;
+        public void onSizeChanged(int w, int h, int oldW, int oldH) {
+            super.onSizeChanged(w, h, oldW, oldH);
+            this.beginWid = (float)getWidth()/8;
             this.endWid = (float)getWidth()-((float)getWidth()/8);
-            this.startHei = (float)getHeight()/8;
+            this.beginHei = (float)getHeight()/8;
             this.endHei = getHeight()-((float)getHeight()/8);
-            this.oval = new RectF(this.startWid,this.startHei , this.endWid, this.endHei);
-            returnDefualt();
+            this.oval = new RectF(this.beginWid,this.beginHei, this.endWid, this.endHei);
+            returnDefault();
         }
-        public void returnDefualt() {
+        public void returnDefault() {
             this.x = (float)getWidth()/2;
             this.y = (float)getHeight()/2;
         }
@@ -83,9 +76,9 @@ public class joystick extends AppCompatActivity {
         public boolean onTouchEvent(MotionEvent event) {
             int action = MotionEventCompat.getActionMasked(event);
             switch (action) {
-                //if the user touched the screen
+
                 case MotionEvent.ACTION_DOWN: {
-                    //check if the input is inside the circle
+
                     if(CheckIfInside(event.getX(), event.getY())) {
                         this.playMoving = true;
                     }
@@ -94,49 +87,36 @@ public class joystick extends AppCompatActivity {
                 case MotionEvent.ACTION_MOVE: {
                     if (!this.playMoving)
                         return true;
-                    //make sure user input is inside limits
+
                     if (CheckForLimit(event.getX(), event.getY())) {
                         this.x = event.getX();
                         this.y = event.getY();
                         invalidate();
                         ///////////////////////////////////////////////////
-                        double xl = normelizeAilron(x);
-                        double yl = normelizeElevator(y);
+                        double normalizedX = normalizeAileron(x);
+                        double normalizedY = normalizeElevator(y);
                         TcpClient tcpClient = TcpClient.getInstance();
-                        tcpClient.sendMessage("set controls/flight/aileron " + xl + "\r\n");
-                        tcpClient.sendMessage("set controls/flight/elevator " + yl + "\r\n");
+                        tcpClient.sendMessage("set controls/flight/aileron " + normalizedX + "\r\n");
+                        tcpClient.sendMessage("set controls/flight/elevator " + normalizedY + "\r\n");
                     }
                     break;
                 }
                 //user input's is finished
                 case MotionEvent.ACTION_UP :
                     this.playMoving = false;
-                    returnDefualt();
+                    returnDefault();
                     //call on draw
                     invalidate();
             }
             return true;
         }
 
-        /**
-         * check if user touching inside the circle
-         * @param xVal
-         * @param yVal
-         * @return
-         */
         Boolean CheckIfInside(float xVal, float yVal) {
             double distance = Math.sqrt((this.x-xVal)*(this.x-xVal) + (this.y-yVal)*(this.y-yVal));
             return (distance <= this.radius);
         }
 
-        /**
-         * make sure give x,y inside the oval shape
-         * @param xVal
-         * @param yVal
-         * @return
-         */
         Boolean CheckForLimit(float xVal, float yVal) {
-            //return (this.oval.contains(xVal, yVal));
             double xCalc = Math.pow(xVal - this.oval.centerX(), 2) / Math.pow((this.oval.width() / 2), 2);
             double yCalc = Math.pow(yVal - this.oval.centerY(), 2) / Math.pow((this.oval.height() / 2), 2);
             xCalc += yCalc;
@@ -147,12 +127,12 @@ public class joystick extends AppCompatActivity {
             }
         }
 
-        public float normelizeAilron(float x) {
-            return (x-((this.startWid+this.endWid)/2))/((this.endWid-this.startWid)/2);
+        public float normalizeAileron(float x) {
+            return (x-((this.beginWid +this.endWid)/2))/((this.endWid-this.beginWid)/2);
         }
 
-        public float normelizeElevator(float y) {
-            return (y-((this.startHei+this.endHei)/2))/((this.startHei-this.endHei)/2);
+        public float normalizeElevator(float y) {
+            return (y-((this.beginHei +this.endHei)/2))/((this.beginHei -this.endHei)/2);
         }
     }
 
