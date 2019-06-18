@@ -10,13 +10,16 @@ import android.widget.EditText;
 public class MainActivity extends AppCompatActivity {
     TcpClient mTcpClient;
 
+    // 'ocCreate' implementation
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
     }
 
+    // the function of the connect button
     public void onClick(View v) {
+        // extract the ip and port values from the input boxes
         String ip = ((EditText) findViewById(R.id.ip_enter_box)).getText().toString();
         if (ip.equals("")) {
             ip = "10.0.2.2";
@@ -27,11 +30,14 @@ public class MainActivity extends AppCompatActivity {
         }
         int port = Integer.parseInt(portStr);
 
+        // initiate the Tcp client
         TcpClient tcpClient = TcpClient.getInstance();
         tcpClient.setSERVER_IP(ip);
         tcpClient.setSERVER_PORT(port);
+        // start the connection
         ConnectTask connectTask = new ConnectTask(tcpClient);
         connectTask.execute();
+        // show the joystick
         Intent intent = new Intent(this, joystick.class);
         startActivity(intent);
 //        tcpClient.sendMessage("qqqqqqqqqqqq\n");
